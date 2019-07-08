@@ -1,4 +1,4 @@
-# cliff
+# cliff [![Build Status](https://travis-ci.com/meetup/cliff.svg?branch=master)](https://travis-ci.com/meetup/cliff)
 
 > An AWS CloudFormation stack diff tool
 
