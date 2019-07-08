@@ -2,7 +2,7 @@
 
 > An AWS CloudFormation stack diff tool
 
-# 🤔 about
+## 🤔 about
 
 [CloudFormation](https://aws.amazon.com/cloudformation/) is an awesome fully managed infrastructure as code tool but it does not always provide the most ideal user interface.
 
