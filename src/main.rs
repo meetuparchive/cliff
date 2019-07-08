@@ -333,6 +333,11 @@ fn run() -> Result<(), Box<dyn StdError>> {
 mod tests {
     use super::*;
     #[test]
+    fn template_body_reads_from_disk() {
+        assert!(template_body("tests/data/template-after.yml").is_ok())
+    }
+
+    #[test]
     fn diff_template_yields_diff() -> Result<(), Box<dyn StdError>> {
         let diff = diff_template(
             &PathBuf::from("tests/data/template-before.yml"),
