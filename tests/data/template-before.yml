@@ -1,0 +1,5 @@
+Resources:
+  DynamodbTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: test

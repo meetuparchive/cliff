@@ -1,0 +1,98 @@
+# lifted release strategy from https://raw.githubusercontent.com/rustwasm/wasm-pack/master/.travis.yml
+language: rust
+# required for codecov tool
+sudo: required
+
+# only build pushes to master and version tags
+# prs are build separately
+# https://docs.travis-ci.com/user/pull-requests/#how-pull-requests-are-built
+branches:
+  only:
+  # release tags
+  - /^v\d+\.\d+\.\d+.*$/
+  - master
+
+# Cache `cargo install`ed tools, but don't cache the project's `target`
+# directory (which ends up over-caching and filling all disk space!)
+cache:
+  directories:
+    - /home/travis/.cargo
+
+# yaml ref for deploying release binary to github
+DEPLOY_TO_GITHUB: &DEPLOY_TO_GITHUB
+  before_deploy:
+    - name="cliff-$TRAVIS_TAG-$OS-$ARCH"
+    - src=$(pwd)
+    - mkdir $name
+    - strip target/$TARGET/release/cliff
+    - cp target/$TARGET/release/cliff $name/
+    - cd $name
+    - tar czvf $src/$name.tar.gz *
+    - cd $src
+    - rm -rf $name
+  deploy:
+    provider: releases
+    api_key: $GH_TOKEN
+    file: cliff-$TRAVIS_TAG-$OS-$ARCH.tar.gz
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: env(GH_TOKEN) is present
+
+matrix:
+  include:
+
+  - name: Tests
+    env: RUST_BACKTRACE=1
+    rust: nightly
+    script:
+    - cargo test --locked
+    - rustup component add rustfmt
+    - cargo fmt --version
+    - cargo fmt --all -- --check
+
+  - name: Linux Binary
+    env: TARGET=x86_64-unknown-linux-musl OS=Linux ARCH=x86_64
+    rust: stable
+    before_script:
+      - rustup target add $TARGET
+      - curl https://www.openssl.org/source/openssl-1.0.2l.tar.gz | tar xzf -
+      - (cd openssl-1.0.2l &&
+        CC=musl-gcc ./Configure --prefix=$HOME/openssl-musl no-dso no-ssl2 no-ssl3 linux-x86_64 -fPIC &&
+        make -j$(nproc) &&
+        make install)
+      - export OPENSSL_DIR=$HOME/openssl-musl
+    script: cargo build --release --target $TARGET --locked
+    addons:
+      apt:
+        packages:
+          - musl-tools
+    <<: *DEPLOY_TO_GITHUB
+
+  - name: macOS Binary
+    env: MACOSX_DEPLOYMENT_TARGET=10.7 TARGET=x86_64-apple-darwin OS=Darwin ARCH=x86_64
+    os: osx
+    rust: stable
+    script: cargo build --release --target $TARGET --locked
+    install: true
+    <<: *DEPLOY_TO_GITHUB
+
+addons:
+  apt:
+    packages:
+    - musl-tools
+    # required by tarpaulin code coverage tool
+    - libssl-dev
+
+install: |
+  if [ "$TRAVIS_RUST_VERSION" == nightly ] && [ $TRAVIS_BRANCH = master ]; then
+    RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin -f
+  fi
+
+after_success:
+  # report coverage to coveralls
+  # see https://github.com/xd009642/tarpaulin for more information
+  - '[ $TRAVIS_RUST_VERSION = nightly ] &&
+     [ $TRAVIS_BRANCH = master ] &&
+     [ $TRAVIS_PULL_REQUEST = false ] &&
+     cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID || true'
