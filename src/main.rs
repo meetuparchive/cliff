@@ -2,6 +2,7 @@
 use colored::Colorize;
 use futures::{future, Future};
 use futures_backoff::Strategy;
+use lazy_static::lazy_static;
 use rusoto_cloudformation::{
     CloudFormation, CloudFormationClient, CreateChangeSetError, CreateChangeSetInput,
     CreateChangeSetOutput, DeleteChangeSetError, DeleteChangeSetInput, DescribeChangeSetError,
@@ -28,7 +29,13 @@ use crate::error::Error;
 
 const CHANGESET_NAME: &str = "cliff";
 
-fn parse_key_val<T, U>(s: &str) -> Result<(T, U), Box<StdError>>
+lazy_static! {
+    static ref RETRIES: Strategy = Strategy::exponential(Duration::from_millis(100))
+        .with_max_retries(15)
+        .with_jitter(true);
+}
+
+fn parse_key_val<T, U>(s: &str) -> Result<(T, U), Box<dyn StdError>>
 where
     T: FromStr,
     T::Err: StdError + 'static,
@@ -61,12 +68,6 @@ struct Options {
     filename: PathBuf,
 }
 
-fn backoff() -> Strategy {
-    Strategy::exponential(Duration::from_millis(100))
-        .with_max_retries(15)
-        .with_jitter(true)
-}
-
 fn credentials() -> ChainProvider {
     let mut chain = ChainProvider::new();
     chain.set_timeout(Duration::from_millis(200));
@@ -85,7 +86,7 @@ fn current_template(
     cf: CloudFormationClient,
     stack_name: String,
 ) -> impl Future<Item = GetTemplateOutput, Error = Error> {
-    backoff().retry_if(
+    RETRIES.retry_if(
         move || {
             cf.get_template(GetTemplateInput {
                 stack_name: Some(stack_name.clone()),
@@ -110,7 +111,7 @@ fn create_changeset(
     template_body: String,
     parameters: Vec<(String, String)>,
 ) -> impl Future<Item = CreateChangeSetOutput, Error = Error> {
-    backoff().retry_if(
+    RETRIES.retry_if(
         move || {
             {
                 cf.create_change_set(CreateChangeSetInput {
