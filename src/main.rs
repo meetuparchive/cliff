@@ -4,7 +4,7 @@ use futures::{future, Future};
 use futures_backoff::Strategy;
 use lazy_static::lazy_static;
 use rusoto_cloudformation::{
-    CloudFormation, CloudFormationClient, CreateChangeSetError, CreateChangeSetInput,
+    Change, CloudFormation, CloudFormationClient, CreateChangeSetError, CreateChangeSetInput,
     CreateChangeSetOutput, DeleteChangeSetError, DeleteChangeSetInput, DescribeChangeSetError,
     DescribeChangeSetInput, DescribeChangeSetOutput, GetTemplateInput, GetTemplateOutput,
     Parameter,
@@ -183,6 +183,30 @@ fn delete_changset(
     .map(|_| ())
 }
 
+fn render_change(change: Change) -> String {
+    let c = change.resource_change.unwrap_or_default();
+
+    let line = format!(
+        "{} {} {} {} {} {}",
+        c.action.clone().unwrap_or_default().bold(),
+        c.resource_type.unwrap_or_default().dimmed(),
+        c.logical_resource_id.unwrap_or_default().bold(),
+        c.physical_resource_id.unwrap_or_default().dimmed(),
+        c.scope.unwrap_or_default().join(", ").bold(),
+        if c.replacement.unwrap_or_default() == "True" {
+            " ⚠️  Requires replacement"
+        } else {
+            ""
+        },
+    );
+    match c.action.unwrap_or_default().as_str() {
+        "Modify" => format!("🔧 {}", line.bright_yellow()),
+        "Remove" => format!("✂️  {}", line.bright_red()),
+        "Add" => format!("🌱 {}", line.bright_green()),
+        _ => line,
+    }
+}
+
 fn diff_changeset(changeset: DescribeChangeSetOutput) {
     if changeset.status.iter().any(|v| v.ends_with("_COMPLETE")) {
         let mut changes = changeset.changes.unwrap_or_default();
@@ -202,28 +226,7 @@ fn diff_changeset(changeset: DescribeChangeSetOutput) {
         });
         for change in changes {
             if change.type_.clone().unwrap_or_default() == "Resource" {
-                let c = change.resource_change.unwrap_or_default();
-
-                //"#{c.action} #{c.resource_type}: #{c.logical_resource_id} #{c.physical_resource_id}"
-                let line = format!(
-                    "{} {} {} {} {} {}",
-                    c.action.clone().unwrap_or_default().bold(),
-                    c.resource_type.unwrap_or_default().dimmed(),
-                    c.logical_resource_id.unwrap_or_default().bold(),
-                    c.physical_resource_id.unwrap_or_default().dimmed(),
-                    c.scope.unwrap_or_default().join(", ").bold(),
-                    if c.replacement.unwrap_or_default() == "True" {
-                        " ⚠️  Requires replacement"
-                    } else {
-                        ""
-                    },
-                );
-                match c.action.unwrap_or_default().as_str() {
-                    "Modify" => println!("🔧 {}", line.bright_yellow()),
-                    "Remove" => println!("✂️  {}", line.bright_red()),
-                    "Add" => println!("🌱 {}", line.bright_green()),
-                    _ => println!("{}", line),
-                }
+                println!("{}", render_change(change));
             } else {
                 println!("other {:#?}", change);
             }
