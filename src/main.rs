@@ -180,7 +180,7 @@ fn delete_changset(
         change_set_name: CHANGESET_NAME.into(),
         stack_name: Some(stack_name),
     })
-    .map(|_| ())
+    .map(drop)
 }
 
 fn render_change(change: Change) -> String {
