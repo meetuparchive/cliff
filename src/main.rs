@@ -113,29 +113,24 @@ fn create_changeset(
 ) -> impl Future<Item = CreateChangeSetOutput, Error = Error> {
     RETRIES.retry_if(
         move || {
-            {
-                cf.create_change_set(CreateChangeSetInput {
-                    change_set_name: CHANGESET_NAME.into(),
-                    stack_name: stack_name.clone(),
-                    template_body: Some(template_body.clone()),
-                    capabilities: Some(vec![
-                        "CAPABILITY_IAM".into(),
-                        "CAPABILITY_NAMED_IAM".into(),
-                    ]),
-                    parameters: Some(
-                        parameters
-                            .clone()
-                            .into_iter()
-                            .map(|(k, v)| Parameter {
-                                parameter_key: Some(k),
-                                parameter_value: Some(v),
-                                ..Parameter::default()
-                            })
-                            .collect(),
-                    ),
-                    ..CreateChangeSetInput::default()
-                })
-            }
+            cf.create_change_set(CreateChangeSetInput {
+                change_set_name: CHANGESET_NAME.into(),
+                stack_name: stack_name.clone(),
+                template_body: Some(template_body.clone()),
+                capabilities: Some(vec!["CAPABILITY_IAM".into(), "CAPABILITY_NAMED_IAM".into()]),
+                parameters: Some(
+                    parameters
+                        .clone()
+                        .into_iter()
+                        .map(|(k, v)| Parameter {
+                            parameter_key: Some(k),
+                            parameter_value: Some(v),
+                            ..Parameter::default()
+                        })
+                        .collect(),
+                ),
+                ..CreateChangeSetInput::default()
+            })
             .map_err(Error::from)
         },
         move |err: &Error| {
