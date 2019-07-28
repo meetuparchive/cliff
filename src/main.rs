@@ -271,10 +271,10 @@ fn diff_template(
         .fold(&mut Command::new(program), |cmd, arg| cmd.arg(arg))
         .args(&[filename.to_str().unwrap_or_default(), path])
         .output()?;
-    // if output.status.code().unwrap_or_default() != 0 {
-    //     eprintln!("{}", from_utf8(&output.stderr)?);
-    //     return Err(Box::new(Error::Differ(tool)));
-    // }
+    if output.status.code().unwrap_or_default() != 0 {
+        eprintln!("{}", from_utf8(&output.stderr)?);
+        return Err(Box::new(Error::Differ(tool)));
+    }
     Ok(from_utf8(&output.stdout)?.into())
 }
 
@@ -307,9 +307,10 @@ fn run() -> Result<(), Box<dyn StdError>> {
         match diff_template(&filename, current.template_body.unwrap_or_default()) {
             Ok(diff) => {
                 println!("{}", diff);
+                //future::Either::A(Ok(()))
                 Ok(())
             },
-            _/*todo*/ => Ok(())
+            err => Ok(())//future::Either::B(err)
         }
     });
 
