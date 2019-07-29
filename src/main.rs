@@ -90,7 +90,7 @@ fn current_parameters(
     RETRIES.retry_if(
         move || {
             cf.describe_stacks(DescribeStacksInput {
-                stack_name: Some(stack_name),
+                stack_name: Some(stack_name.clone()),
                 ..DescribeStacksInput::default()
             })
             .map_err(Error::DescribeStack)
