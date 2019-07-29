@@ -6,11 +6,12 @@ use lazy_static::lazy_static;
 use rusoto_cloudformation::{
     Change, CloudFormation, CloudFormationClient, CreateChangeSetError, CreateChangeSetInput,
     CreateChangeSetOutput, DeleteChangeSetError, DeleteChangeSetInput, DescribeChangeSetError,
-    DescribeChangeSetInput, DescribeChangeSetOutput, GetTemplateInput, GetTemplateOutput,
-    Parameter,
+    DescribeChangeSetInput, DescribeChangeSetOutput, DescribeStacksInput, GetTemplateInput,
+    GetTemplateOutput, Parameter,
 };
 use rusoto_core::{credential::ChainProvider, request::HttpClient, Region, RusotoError};
 use std::{
+    collections::HashMap,
     env,
     error::Error as StdError,
     fs,
@@ -82,6 +83,41 @@ fn client() -> CloudFormationClient {
     )
 }
 
+fn current_parameters(
+    cf: CloudFormationClient,
+    stack_name: String,
+) -> impl Future<Item = Vec<(String, String)>, Error = Error> {
+    cf.describe_stacks(DescribeStacksInput {
+        stack_name: Some(stack_name),
+        ..DescribeStacksInput::default()
+    })
+    .map_err(Error::DescribeStack)
+    .map(|result| {
+        result
+            .stacks
+            .unwrap_or_default()
+            .first()
+            .map(|stack| {
+                stack
+                    .clone()
+                    .parameters
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|param| {
+                        (
+                            param.parameter_key.unwrap_or_default(),
+                            param
+                                .resolved_value
+                                .or(param.parameter_value)
+                                .unwrap_or_default(),
+                        )
+                    })
+                    .collect()
+            })
+            .unwrap_or_default()
+    })
+}
+
 fn current_template(
     cf: CloudFormationClient,
     stack_name: String,
@@ -111,6 +147,7 @@ fn create_changeset(
     template_body: String,
     parameters: Vec<(String, String)>,
 ) -> impl Future<Item = CreateChangeSetOutput, Error = Error> {
+    println!("{:#?}", parameters);
     RETRIES.retry_if(
         move || {
             cf.create_change_set(CreateChangeSetInput {
@@ -289,6 +326,19 @@ fn main() {
     }
 }
 
+fn merge(
+    prev: Vec<(String, String)>,
+    provided: Vec<(String, String)>,
+) -> Vec<(String, String)> {
+    let lookup = provided.into_iter().collect::<HashMap<String, String>>();
+    prev.into_iter()
+        .map(|(k, v)| {
+            let value = lookup.get(&k).cloned().unwrap_or(v);
+            (k, value)
+        })
+        .collect()
+}
+
 fn run() -> Result<(), Box<dyn StdError>> {
     env_logger::init();
     let Options {
@@ -296,34 +346,37 @@ fn run() -> Result<(), Box<dyn StdError>> {
         stack_name,
         filename,
     } = Options::from_args();
-    let stack_name2 = stack_name.clone();
     let cf = client();
+    let cf2 = cf.clone();
+    let cf3 = cf.clone();
+    let stack_name2 = stack_name.clone();
+    let stack_name3 = stack_name.clone();
 
     let current_template = current_template(cf.clone(), stack_name.clone());
     let body = template_body(filename.clone())?;
-    let changeset = create_changeset(cf.clone(), stack_name.clone(), body, parameters);
+    let changeset =
+        current_parameters(cf.clone(), stack_name.clone()).and_then(|prev_parameters| {
+            create_changeset(cf, stack_name, body, merge(prev_parameters, parameters))
+        });
 
     let diff_templates = current_template.and_then(move |current| {
         match diff_template(&filename, current.template_body.unwrap_or_default()) {
             Ok(diff) => {
                 println!("{}", diff);
-                //future::Either::A(Ok(()))
                 Ok(())
-            },
-            err => Ok(())//future::Either::B(err)
+            }
+            /*todo*/ _ => Ok(()),
         }
     });
 
-    let stack_name3 = stack_name.clone();
-    let cf2 = cf.clone();
-    let diff_changeset = diff_templates.and_then(|_| changeset).and_then(move |_| {
-        describe_changeset(cf.clone(), stack_name3)
-            .map_err(Error::Describe)
+    let diff_changeset = diff_templates.and_then(|_| changeset).and_then(|_| {
+        describe_changeset(cf2, stack_name2)
+            .map_err(Error::DescribeChangeset)
             .map(diff_changeset)
     });
 
     let complete =
-        diff_changeset.and_then(move |_| delete_changset(cf2, stack_name2).map_err(Error::Delete));
+        diff_changeset.and_then(|_| delete_changset(cf3, stack_name3).map_err(Error::Delete));
 
     Runtime::new().unwrap().block_on(complete)?;
     Ok(())

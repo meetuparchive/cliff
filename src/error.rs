@@ -1,5 +1,6 @@
 use rusoto_cloudformation::{
-    CreateChangeSetError, DeleteChangeSetError, DescribeChangeSetError, GetTemplateError,
+    CreateChangeSetError, DeleteChangeSetError, DescribeChangeSetError, DescribeStacksError,
+    GetTemplateError,
 };
 use rusoto_core::{request::BufferedHttpResponse, RusotoError};
 use serde::Deserialize;
@@ -23,7 +24,8 @@ struct ErrorResponseError {
 pub enum Error {
     Get(RusotoError<GetTemplateError>),
     Create(RusotoError<CreateChangeSetError>),
-    Describe(RusotoError<DescribeChangeSetError>),
+    DescribeChangeset(RusotoError<DescribeChangeSetError>),
+    DescribeStack(RusotoError<DescribeStacksError>),
     Delete(RusotoError<DeleteChangeSetError>),
     Differ(String),
     Validation(String),
@@ -85,7 +87,8 @@ impl fmt::Display for Error {
             match self {
                 Error::Get(e) => e.to_string(),
                 Error::Create(e) => e.to_string(),
-                Error::Describe(e) => e.to_string(),
+                Error::DescribeChangeset(e) => e.to_string(),
+                Error::DescribeStack(e) => e.to_string(),
                 Error::Delete(e) => e.to_string(),
                 Error::Differ(tool) => format!("Invalid differ tool {}", tool),
                 Error::Validation(message) => format!("Error: {}", message),

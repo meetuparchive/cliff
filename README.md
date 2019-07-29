@@ -4,7 +4,7 @@
 
 ## 🥰 features
 
-* visible, predictable infrastructure deployment
+* visible, predictable infrastructure deployments
 * optimized for human DX
 
 ## 🤔 about
@@ -23,7 +23,7 @@ $ cliff \
 	path/to/template.yml
 ```
 
-Many CloudFormation templates will employ parameterizatin for flexibility. In those cases you'll want to use the `--parameters` or `-p` option.
+Many CloudFormation templates will employ parameterization for flexibility. By default cliff will reuse the parameters previously provided but often you'll want to change those for new deployments. In those cases you'll want to use the `--parameters` or `-p` option.
 
 ```sh
 $ cliff \
