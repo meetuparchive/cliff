@@ -4,8 +4,8 @@
 
 ## 🥰 features
 
-* visible, predictable infrastructure deployments
-* optimized for human DX
+* ♻️visible and predictable infrastructure deployment outcomes
+* 👩‍💻optimized for human DX
 
 ## 🤔 about
 
