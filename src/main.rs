@@ -290,7 +290,7 @@ fn diff_changeset(changeset: DescribeChangeSetOutput) {
             }
         }
         "FAILED" => {
-            println!("{}", changeset.status_reason.unwrap_or_default());
+            println!("⚠️ {}", changeset.status_reason.unwrap_or_default());
         }
         other => {
             println!("change set resulted in status of {}", other);

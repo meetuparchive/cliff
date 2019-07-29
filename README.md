@@ -23,7 +23,9 @@ $ cliff \
 	path/to/template.yml
 ```
 
-Many CloudFormation templates will employ parameterization for flexibility. By default cliff will reuse the parameters previously provided but often you'll want to change those for new deployments. In those cases you'll want to use the `--parameters` or `-p` option.
+💡Cliff will report when there is nothing in the changset between the current stack and the remote stack.
+
+Many CloudFormation templates will employ parameterization for flexibility. By default, cliff will reuse the parameters previously provided but often you'll want to change those for new deployments. In those cases, use the `--parameters` or `-p` option.
 
 ```sh
 $ cliff \
@@ -48,5 +50,11 @@ If you are a [colordiff](https://www.colordiff.org/) user you may want to use us
 
 This is a [rustlang](https://www.rust-lang.org/en-US/) application.
 Go grab yourself a copy with [rustup](https://rustup.rs/).
+
+### changesets
+
+Cliff leverages the CloudFormation feature of creating a remote changeset to understand and predict the effect of a CloudFormation deployment. 
+In particular you may be interested in what will be added, removed, or modified in stack before actually deploying your changes.
+
 
 Meetup Inc 2019
