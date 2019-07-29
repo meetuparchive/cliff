@@ -35,7 +35,14 @@ $ cliff \
 ### diffing
 
 By default cliff will `diff --label -u` to compare local and remote templates. If you would like a fancier diff tool, cliff will use the value of 
-an environment variable `CLIFF_DIFFER` instead. If you are a [VS Code](https://code.visualstudio.com/) user you may want to use `CLIFF_DIFFER="code --wait --diff"` or if you prefer [colordiff](https://www.colordiff.org/), you might use `CLIFF_DIFFER=colordiff`
+an environment variable `CLIFF_DIFFER` instead. 
+
+#### vscode 
+If you are a [VS Code](https://code.visualstudio.com/) user you may want to use `CLIFF_DIFFER="code --wait --diff"`
+
+#### colordiff
+
+If you are a [colordiff](https://www.colordiff.org/) user you may want to use use `CLIFF_DIFFER=colordiff`
 
 ## 👩‍🏭 development
 
