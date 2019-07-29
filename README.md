@@ -46,15 +46,15 @@ If you are a [VS Code](https://code.visualstudio.com/) user you may want to use 
 
 If you are a [colordiff](https://www.colordiff.org/) user you may want to use use `CLIFF_DIFFER=colordiff`
 
-## 👩‍🏭 development
-
-This is a [rustlang](https://www.rust-lang.org/en-US/) application.
-Go grab yourself a copy with [rustup](https://rustup.rs/).
-
 ### changesets
 
 Cliff leverages the CloudFormation feature of creating a remote changeset to understand and predict the effect of a CloudFormation deployment. 
 In particular you may be interested in what will be added, removed, or modified in stack before actually deploying your changes.
+
+## 👩‍🏭 development
+
+This is a [rustlang](https://www.rust-lang.org/en-US/) application.
+Go grab yourself a copy with [rustup](https://rustup.rs/)
 
 
 Meetup Inc 2019
