@@ -385,6 +385,18 @@ fn run() -> Result<(), Box<dyn StdError>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn merge_merges_parameters() {
+        assert_eq!(
+            merge(
+                vec![("foo".into(), "bar".into()), ("baz".into(), "boom".into())],
+                vec![("baz".into(), "zoom".into())]
+            ),
+            vec![("foo".into(), "bar".into()), ("baz".into(), "zoom".into())]
+        )
+    }
+
     #[test]
     fn template_body_reads_from_disk() {
         assert!(template_body("tests/data/template-after.yml").is_ok())
