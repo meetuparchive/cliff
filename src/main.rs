@@ -308,10 +308,10 @@ fn diff_template(
         .fold(&mut Command::new(program), |cmd, arg| cmd.arg(arg))
         .args(&[filename.to_str().unwrap_or_default(), path])
         .output()?;
-    if output.status.code().unwrap_or_default() != 0 {
+    /*if output.status.code().unwrap_or_default() != 0 {
         eprintln!("{}", from_utf8(&output.stderr)?);
         return Err(Box::new(Error::Differ(tool)));
-    }
+    }*/
     Ok(from_utf8(&output.stdout)?.into())
 }
 
