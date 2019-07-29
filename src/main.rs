@@ -147,7 +147,6 @@ fn create_changeset(
     template_body: String,
     parameters: Vec<(String, String)>,
 ) -> impl Future<Item = CreateChangeSetOutput, Error = Error> {
-    println!("{:#?}", parameters);
     RETRIES.retry_if(
         move || {
             cf.create_change_set(CreateChangeSetInput {
