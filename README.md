@@ -49,7 +49,7 @@ If you are a [colordiff](https://www.colordiff.org/) user you may want to use us
 ### changesets
 
 Cliff leverages the CloudFormation feature of creating a remote changeset to understand and predict the effect of a CloudFormation deployment. 
-In particular you may be interested in what will be added, removed, or modified in stack before actually deploying your changes.
+In particular you may be interested in what will be added, removed, or modified in you stack before actually deploying your changes.
 
 ## 👩‍🏭 development
 
