@@ -230,7 +230,7 @@ fn delete_changset(
     .map(drop)
 }
 
-fn render_change(change: Change) -> String {
+fn render(change: Change) -> String {
     let c = change.resource_change.unwrap_or_default();
 
     let line = format!(
@@ -254,35 +254,47 @@ fn render_change(change: Change) -> String {
     }
 }
 
+fn sort(changes: &mut Vec<Change>) {
+    changes.sort_by(|a, b| {
+        a.resource_change
+            .clone()
+            .unwrap_or_default()
+            .action
+            .unwrap_or_default()
+            .cmp(
+                &b.resource_change
+                    .clone()
+                    .unwrap_or_default()
+                    .action
+                    .unwrap_or_default(),
+            )
+    });
+}
+
 fn diff_changeset(changeset: DescribeChangeSetOutput) {
-    if changeset.status.iter().any(|v| v.ends_with("_COMPLETE")) {
-        let mut changes = changeset.changes.unwrap_or_default();
-        changes.sort_by(|a, b| {
-            a.resource_change
-                .clone()
-                .unwrap_or_default()
-                .action
-                .unwrap_or_default()
-                .cmp(
-                    &b.resource_change
-                        .clone()
-                        .unwrap_or_default()
-                        .action
-                        .unwrap_or_default(),
-                )
-        });
-        for change in changes {
-            if change.type_.clone().unwrap_or_default() == "Resource" {
-                println!("{}", render_change(change));
-            } else {
-                println!("other {:#?}", change);
+    match &changeset
+        .status
+        .as_ref()
+        .map(|s| s.as_str())
+        .unwrap_or_default()[..]
+    {
+        complete if complete.ends_with("_COMPLETE") => {
+            let mut changes = changeset.changes.unwrap_or_default();
+            sort(&mut changes);
+            for change in changes {
+                if change.type_.clone().unwrap_or_default() == "Resource" {
+                    println!("{}", render(change));
+                } else {
+                    println!("other {:#?}", change);
+                }
             }
         }
-    } else {
-        println!(
-            "change set status is {}",
-            changeset.status.unwrap_or_default()
-        );
+        "FAILED" => {
+            println!("{}", changeset.status_reason.unwrap_or_default());
+        }
+        other => {
+            println!("change set resulted in status of {}", other);
+        }
     }
 }
 
