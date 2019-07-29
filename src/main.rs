@@ -87,35 +87,46 @@ fn current_parameters(
     cf: CloudFormationClient,
     stack_name: String,
 ) -> impl Future<Item = Vec<(String, String)>, Error = Error> {
-    cf.describe_stacks(DescribeStacksInput {
-        stack_name: Some(stack_name),
-        ..DescribeStacksInput::default()
-    })
-    .map_err(Error::DescribeStack)
-    .map(|result| {
-        result
-            .stacks
-            .unwrap_or_default()
-            .first()
-            .map(|stack| {
-                stack
-                    .clone()
-                    .parameters
-                    .unwrap_or_default()
-                    .into_iter()
-                    .map(|param| {
-                        (
-                            param.parameter_key.unwrap_or_default(),
-                            param
-                                .resolved_value
-                                .or(param.parameter_value)
-                                .unwrap_or_default(),
-                        )
-                    })
-                    .collect()
+    RETRIES.retry_if(
+        move || {
+            cf.describe_stacks(DescribeStacksInput {
+                stack_name: Some(stack_name),
+                ..DescribeStacksInput::default()
             })
-            .unwrap_or_default()
-    })
+            .map_err(Error::DescribeStack)
+            .map(|result| {
+                result
+                    .stacks
+                    .unwrap_or_default()
+                    .first()
+                    .map(|stack| {
+                        stack
+                            .clone()
+                            .parameters
+                            .unwrap_or_default()
+                            .into_iter()
+                            .map(|param| {
+                                (
+                                    param.parameter_key.unwrap_or_default(),
+                                    param
+                                        .resolved_value
+                                        .or(param.parameter_value)
+                                        .unwrap_or_default(),
+                                )
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default()
+            })
+        },
+        |err: &Error| {
+            log::debug!("get describe stacks error {}", err);
+            match err {
+                Error::Throttling(_) => true,
+                _ => false,
+            }
+        },
+    )
 }
 
 fn current_template(
