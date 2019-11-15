@@ -77,7 +77,10 @@ impl From<RusotoError<CreateChangeSetError>> for Error {
 impl StdError for Error {}
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter,
+    ) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}",
