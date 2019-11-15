@@ -309,10 +309,7 @@ fn suffix_tempfile(filename: &PathBuf) -> io::Result<tempfile::NamedTempFile> {
         .tempfile()?)
 }
 
-fn diff_template(
-    filename: &PathBuf,
-    template_body: String,
-) -> Result<String, Box<dyn StdError>> {
+fn diff_template(filename: &PathBuf, template_body: String) -> Result<String, Box<dyn StdError>> {
     let mut tmp = suffix_tempfile(&filename)?;
     tmp.write_all(&template_body.as_bytes().to_vec()[..])?;
     tmp.flush()?;
@@ -348,10 +345,7 @@ fn main() {
     }
 }
 
-fn merge(
-    prev: Vec<(String, String)>,
-    provided: Vec<(String, String)>,
-) -> Vec<(String, String)> {
+fn merge(prev: Vec<(String, String)>, provided: Vec<(String, String)>) -> Vec<(String, String)> {
     let lookup = provided.into_iter().collect::<HashMap<String, String>>();
     prev.into_iter()
         .map(|(k, v)| {
