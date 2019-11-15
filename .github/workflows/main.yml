@@ -50,7 +50,7 @@ jobs:
     - name: Test
       run: cargo test --verbose
     - name: Coverage
-      if: matrix.rust == 'stable'
+      if: matrix.rust == 'stable' && matrix.os == 'ubuntu-latest'
       run: |
         # tarpaulin knows how to extract data from ci
         # ci services and GitHub actions is not one of them
