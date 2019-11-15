@@ -63,6 +63,7 @@ jobs:
         cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
 
   release:
+    if: startsWith(github.ref, 'refs/tags/')
     needs: [test]
     strategy:
       matrix:
@@ -112,7 +113,6 @@ jobs:
         cd -
     - name: Publish
       uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
       with:
           files: 'cliff*'
       env:
