@@ -11,7 +11,7 @@
 
 [CloudFormation](https://aws.amazon.com/cloudformation/) is an awesome fully managed infrastructure as code tool but applying these changes to your existing infrastructure can sometimes have suprising effects. Cliff can help with that.
 
-Cliff is enhances CloudFormation by enabling you to see your changes will look like before you make them  💅 . You can think of cliff as the combination of create changeset + describe changeset + diff packaged into one tool. You _can_ do all of these things without cliff using the aws cli the result will come at the expense of learning to cross stitch and understanding nuances of CloudFormation detalis 🧶. Cliff does that stitching for you with a display intended for humans.
+Cliff is enhances CloudFormation by enabling you to see your changes will look like before you make them  💅 . You can think of cliff as the combination of create changeset + describe changeset + diff packaged into one tool. You _can_ do all of these things without cliff using the aws cli the result will come at the expense of learning to cross stitch and understanding nuances of CloudFormation details 🧶. Cliff does that stitching for you with a display intended for humans.
 
 ## 🤸 usage
 
