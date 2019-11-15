@@ -1,4 +1,4 @@
-# cliff [[!GitHub actions](https://github.com/meetup/cliff/workflows/Main/badge.svg)](https://github.com/meetup/cliff/actions) [![Coverage Status](https://coveralls.io/repos/github/meetup/cliff/badge.svg?branch=master)](https://coveralls.io/github/meetup/cliff?branch=master)
+# cliff [![GitHub actions](https://github.com/meetup/cliff/workflows/Main/badge.svg)](https://github.com/meetup/cliff/actions) [![Coverage Status](https://coveralls.io/repos/github/meetup/cliff/badge.svg?branch=master)](https://coveralls.io/github/meetup/cliff?branch=master)
 
 > An AWS CloudFormation stack diff tool
 
