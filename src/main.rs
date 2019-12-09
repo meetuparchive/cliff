@@ -53,8 +53,12 @@ where
 #[structopt(name = "cliff")]
 /// A CloudFormation stack diff tool"
 struct Options {
-    #[structopt(short, long, parse(try_from_str = parse_key_val))]
-    /// multi-valued parameter for providing template parameters in the form 'parameter-name=parameter-value'
+    #[structopt(
+        short = "p",
+        long = "parameters",
+        parse(try_from_str = parse_key_val),
+        help = "multi-valued parameter for providing template parameters in the form 'parameter-name=parameter-value'"
+    )]
     parameters: Vec<(String, String)>,
     #[structopt(short, long = "stack-name")]
     /// name of the CloudFormation stack to diff against
