@@ -11,7 +11,6 @@ use rusoto_cloudformation::{
 };
 use rusoto_core::{credential::ChainProvider, request::HttpClient, Region, RusotoError};
 use std::{
-    collections::HashMap,
     env,
     error::Error as StdError,
     fs,
@@ -326,7 +325,7 @@ fn diff_template(
     let output = args
         .iter()
         .fold(&mut Command::new(program), |cmd, arg| cmd.arg(arg))
-        .args(&[filename.to_str().unwrap_or_default(), path])
+        .args(&[path, filename.to_str().unwrap_or_default()])
         .output()?;
     /*if output.status.code().unwrap_or_default() != 0 {
         eprintln!("{}", from_utf8(&output.stderr)?);
@@ -346,19 +345,6 @@ fn main() {
     }
 }
 
-fn merge(
-    prev: Vec<(String, String)>,
-    provided: Vec<(String, String)>,
-) -> Vec<(String, String)> {
-    let lookup = provided.into_iter().collect::<HashMap<String, String>>();
-    prev.into_iter()
-        .map(|(k, v)| {
-            let value = lookup.get(&k).cloned().unwrap_or(v);
-            (k, value)
-        })
-        .collect()
-}
-
 fn run() -> Result<(), Box<dyn StdError>> {
     env_logger::init();
     let Options {
@@ -375,8 +361,8 @@ fn run() -> Result<(), Box<dyn StdError>> {
     let current_template = current_template(cf.clone(), stack_name.clone());
     let body = template_body(filename.clone())?;
     let changeset =
-        current_parameters(cf.clone(), stack_name.clone()).and_then(|prev_parameters| {
-            create_changeset(cf, stack_name, body, merge(prev_parameters, parameters))
+        current_parameters(cf.clone(), stack_name.clone()).and_then(|_| {
+            create_changeset(cf, stack_name, body, parameters)
         });
 
     let diff_templates = current_template.and_then(move |current| {
@@ -407,17 +393,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn merge_merges_parameters() {
-        assert_eq!(
-            merge(
-                vec![("foo".into(), "bar".into()), ("baz".into(), "boom".into())],
-                vec![("baz".into(), "zoom".into())]
-            ),
-            vec![("foo".into(), "bar".into()), ("baz".into(), "zoom".into())]
-        )
-    }
-
-    #[test]
     fn template_body_reads_from_disk() {
         assert!(template_body("tests/data/template-after.yml").is_ok())
     }
@@ -431,10 +406,10 @@ mod tests {
         assert_eq!(
             diff,
             r#"5c5
-<       TableName: test
+<       TableName: test2
 \ No newline at end of file
 ---
->       TableName: test2
+>       TableName: test
 \ No newline at end of file
 "#
         );
